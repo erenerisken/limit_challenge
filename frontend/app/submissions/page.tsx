@@ -11,8 +11,9 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
+import { searchStatePresets, useSearchState } from '@/lib/hooks/useSearchState';
 import { useBrokerOptions } from '@/lib/hooks/useBrokerOptions';
 import { useSubmissionsList } from '@/lib/hooks/useSubmissions';
 import { SubmissionStatus } from '@/lib/types';
@@ -26,15 +27,26 @@ const STATUS_OPTIONS: { label: string; value: SubmissionStatus | '' }[] = [
 ];
 
 export default function SubmissionsPage() {
-  const [status, setStatus] = useState<SubmissionStatus | ''>('');
-  const [brokerId, setBrokerId] = useState('');
-  const [companyQuery, setCompanyQuery] = useState('');
+  const [status, setStatus] = useSearchState<SubmissionStatus | undefined>({
+    name: 'status',
+    ...searchStatePresets.string<SubmissionStatus>(),
+  });
+
+  const [brokerId, setBrokerId] = useSearchState({
+    name: 'brokerId',
+    ...searchStatePresets.number(),
+  });
+
+  const [companyQuery, setCompanyQuery] = useSearchState({
+    name: 'companySearch',
+    ...searchStatePresets.string(),
+  });
 
   const filters = useMemo(
     () => ({
-      status: status || undefined,
-      brokerId: brokerId || undefined,
-      companySearch: companyQuery || undefined,
+      status,
+      brokerId: brokerId ? String(brokerId) : undefined,
+      companySearch: companyQuery,
     }),
     [status, brokerId, companyQuery],
   );
@@ -50,8 +62,7 @@ export default function SubmissionsPage() {
             Submissions
           </Typography>
           <Typography color="text.secondary">
-            Filters update the query parameters and drive backend filtering. Hook these inputs to
-            your API calls when you implement the actual data fetching.
+            Filters are synced with the URL and drive backend filtering.
           </Typography>
         </Box>
 
@@ -61,8 +72,10 @@ export default function SubmissionsPage() {
               <TextField
                 select
                 label="Status"
-                value={status}
-                onChange={(event) => setStatus(event.target.value as SubmissionStatus | '')}
+                value={status ?? ''}
+                onChange={(event) =>
+                  setStatus((event.target.value || undefined) as SubmissionStatus | undefined)
+                }
                 fullWidth
               >
                 {STATUS_OPTIONS.map((option) => (
@@ -71,11 +84,14 @@ export default function SubmissionsPage() {
                   </MenuItem>
                 ))}
               </TextField>
+
               <TextField
                 select
                 label="Broker"
-                value={brokerId}
-                onChange={(event) => setBrokerId(event.target.value)}
+                value={brokerId ? String(brokerId) : ''}
+                onChange={(event) =>
+                  setBrokerId(event.target.value ? Number(event.target.value) : undefined)
+                }
                 fullWidth
                 helperText="Populate options via /api/brokers"
               >
@@ -86,10 +102,11 @@ export default function SubmissionsPage() {
                   </MenuItem>
                 ))}
               </TextField>
+
               <TextField
                 label="Company search"
-                value={companyQuery}
-                onChange={(event) => setCompanyQuery(event.target.value)}
+                value={companyQuery ?? ''}
+                onChange={(event) => setCompanyQuery(event.target.value || undefined)}
                 fullWidth
                 helperText="Send as ?companySearch=..."
               />
@@ -102,13 +119,12 @@ export default function SubmissionsPage() {
             <Stack spacing={2}>
               <Typography variant="h6">Submission list</Typography>
               <Typography color="text.secondary">
-                Hook `submissionsQuery` to render rows, totals, and pagination states. The query is
-                disabled by default so no network calls fire until you enable it.
+                Hook `submissionsQuery` to render rows, totals, and pagination states.
               </Typography>
               <Divider />
               <Box>
                 <pre style={{ margin: 0, fontSize: 14 }}>
-                  {JSON.stringify({ filters, queryKey: submissionsQuery.queryKey }, null, 2)}
+                  {JSON.stringify({ filters }, null, 2)}
                 </pre>
               </Box>
             </Stack>
