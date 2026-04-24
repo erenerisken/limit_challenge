@@ -44,3 +44,4 @@ class SubmissionViewSet(viewsets.ReadOnlyModelViewSet):
 class BrokerViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Broker.objects.all()
     serializer_class = serializers.BrokerSerializer
+    pagination_class = None
