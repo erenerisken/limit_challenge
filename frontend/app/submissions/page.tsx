@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Autocomplete,
   Box,
   Card,
   CardContent,
@@ -85,23 +86,25 @@ export default function SubmissionsPage() {
                 ))}
               </TextField>
 
-              <TextField
-                select
-                label="Broker"
-                value={brokerId ? String(brokerId) : ''}
-                onChange={(event) =>
-                  setBrokerId(event.target.value ? Number(event.target.value) : undefined)
-                }
+              <Autocomplete
                 fullWidth
-                helperText="Populate options via /api/brokers"
-              >
-                <MenuItem value="">All brokers</MenuItem>
-                {brokerQuery.data?.map((broker) => (
-                  <MenuItem key={broker.id} value={String(broker.id)}>
-                    {broker.name}
-                  </MenuItem>
-                ))}
-              </TextField>
+                options={brokerQuery.data ?? []}
+                disabled={brokerQuery.isLoading}
+                value={brokerQuery.data?.find((broker) => broker.id === brokerId) ?? null}
+                onChange={(_, broker) => {
+                  setBrokerId(broker?.id);
+                }}
+                getOptionLabel={(broker) => broker.name}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Broker"
+                    helperText="Search and filter by broker"
+                    fullWidth
+                  />
+                )}
+              />
 
               <TextField
                 label="Company search"
