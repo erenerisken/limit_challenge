@@ -10,11 +10,18 @@ class SubmissionViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_class = SubmissionFilterSet
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().select_related(
+            "broker",
+            "company",
+            "owner",
+        )
 
         if self.action == "list":
-            latest_note = models.Note.objects.filter(submission_id=OuterRef("pk")).order_by("-created_at")
-            queryset = queryset.annotate(
+            latest_note = models.Note.objects.filter(
+                submission_id=OuterRef("pk"),
+            ).order_by("-created_at")
+
+            return queryset.annotate(
                 document_count=Count("documents", distinct=True),
                 note_count=Count("notes", distinct=True),
                 latest_note_author=Subquery(latest_note.values("author_name")[:1]),
@@ -22,7 +29,11 @@ class SubmissionViewSet(viewsets.ReadOnlyModelViewSet):
                 latest_note_created_at=Subquery(latest_note.values("created_at")[:1]),
             )
 
-        return queryset
+        return queryset.prefetch_related(
+            "contacts",
+            "documents",
+            "notes",
+        )
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -33,4 +44,3 @@ class SubmissionViewSet(viewsets.ReadOnlyModelViewSet):
 class BrokerViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Broker.objects.all()
     serializer_class = serializers.BrokerSerializer
-
