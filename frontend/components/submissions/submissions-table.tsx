@@ -212,9 +212,15 @@ export function SubmissionsTable({
                   <TableRow
                     key={submission.id}
                     hover
-                    onClick={() =>
-                      router.push(`/submissions/${submission.id}${window.location.search}`)
-                    }
+                    onClick={(e) => {
+                      const href = `/submissions/${submission.id}${window.location.search}`;
+
+                      if (e.metaKey || e.ctrlKey) {
+                        window.open(href, '_blank');
+                      } else {
+                        router.push(href);
+                      }
+                    }}
                     sx={{
                       transition: 'background-color 0.25s ease',
                       height: TABLE_ROW_HEIGHT,
