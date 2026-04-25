@@ -1,15 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
 import { QueryKey, useQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@/lib/api-client';
-import {
-  PaginatedResponse,
-  SubmissionDetail,
-  SubmissionListFilters,
-  SubmissionListItem,
-} from '@/lib/types';
+import { PaginatedResponse, SubmissionDetail, SubmissionListFilters, SubmissionListItem, } from '@/lib/types';
 
 const SUBMISSIONS_QUERY_KEY = 'submissions';
 

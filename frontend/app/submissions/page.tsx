@@ -11,10 +11,11 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { SubmissionsTable } from '@/components/submissions/submissions-table';
 import { useBrokerOptions } from '@/lib/hooks/useBrokerOptions';
+import { useDebounce } from '@/lib/hooks/useDebounce';
 import { searchStatePresets, useSearchState } from '@/lib/hooks/useSearchState';
 import { useSubmissionsList } from '@/lib/hooks/useSubmissions';
 import { SubmissionStatus } from '@/lib/types';
@@ -45,11 +46,21 @@ export default function SubmissionsPage() {
     ...searchStatePresets.string(),
   });
 
+  const [companyInput, setCompanyInput] = useState(companyQuery ?? '');
+  const debouncedCompanyInput = useDebounce(companyInput);
+
   const [page, setPage] = useSearchState({
     name: 'page',
     defaultValue: 1,
     ...searchStatePresets.number(),
   });
+
+  useEffect(() => {
+    if ((companyQuery ?? '') === debouncedCompanyInput) return;
+
+    setCompanyQuery(debouncedCompanyInput || undefined);
+    setPage(1);
+  }, [companyQuery, debouncedCompanyInput, setCompanyQuery, setPage]);
 
   const filters = useMemo(
     () => ({
@@ -118,10 +129,9 @@ export default function SubmissionsPage() {
 
               <TextField
                 label="Company search"
-                value={companyQuery ?? ''}
+                value={companyInput}
                 onChange={(event) => {
-                  setCompanyQuery(event.target.value || undefined);
-                  resetPage();
+                  setCompanyInput(event.target.value);
                 }}
                 fullWidth
                 helperText="Search by company legal name"
@@ -130,18 +140,16 @@ export default function SubmissionsPage() {
           </CardContent>
         </Card>
 
-        <Stack>
-          <SubmissionsTable
-            submissions={submissionsQuery.data?.results ?? []}
-            totalCount={submissionsQuery.data?.count ?? 0}
-            page={page ?? 1}
-            rowsPerPage={ROWS_PER_PAGE}
-            isLoading={submissionsQuery.isLoading}
-            error={submissionsQuery.error ? 'Failed to load submissions.' : null}
-            onRetryAction={() => submissionsQuery.refetch()}
-            onPageChangeAction={setPage}
-          />
-        </Stack>
+        <SubmissionsTable
+          submissions={submissionsQuery.data?.results ?? []}
+          totalCount={submissionsQuery.data?.count ?? 0}
+          page={page ?? 1}
+          rowsPerPage={ROWS_PER_PAGE}
+          isLoading={submissionsQuery.isLoading}
+          error={submissionsQuery.error ? 'Failed to load submissions.' : null}
+          onRetryAction={() => submissionsQuery.refetch()}
+          onPageChangeAction={setPage}
+        />
       </Stack>
     </Container>
   );
