@@ -17,6 +17,8 @@ type UseSearchStateOptions<T> = SearchStatePreset<T> & {
   equalityFn?: (a: T | undefined, b: T | undefined) => boolean;
 };
 
+type SearchStateUpdates = Record<string, Primitive>;
+
 export const searchStatePresets = {
   string: <T extends string = string>(): SearchStatePreset<T | undefined> => ({
     parse: (value) => (value || undefined) as T | undefined,
@@ -43,6 +45,15 @@ export const searchStatePresets = {
   }),
 };
 
+function updateSearchParam(params: URLSearchParams, key: string, value: Primitive) {
+  if (value === undefined || value === null || value === '') {
+    params.delete(key);
+    return;
+  }
+
+  params.set(key, String(value));
+}
+
 export function useSearchState<T>({
   name,
   defaultValue,
@@ -54,6 +65,20 @@ export function useSearchState<T>({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  const navigateWithParams = useCallback(
+    (params: URLSearchParams) => {
+      const queryString = params.toString();
+      const nextUrl = queryString ? `${pathname}?${queryString}` : pathname;
+
+      if (replace) {
+        router.replace(nextUrl, { scroll: false });
+      } else {
+        router.push(nextUrl, { scroll: false });
+      }
+    },
+    [pathname, replace, router],
+  );
 
   const value = useMemo(() => {
     try {
@@ -72,23 +97,24 @@ export function useSearchState<T>({
       const serialized = serialize(nextValue);
       const isDefaultValue = equalityFn(nextValue, defaultValue);
 
-      if (serialized === undefined || serialized === null || serialized === '' || isDefaultValue) {
-        params.delete(name);
-      } else {
-        params.set(name, String(serialized));
-      }
-
-      const queryString = params.toString();
-      const nextUrl = queryString ? `${pathname}?${queryString}` : pathname;
-
-      if (replace) {
-        router.replace(nextUrl, { scroll: false });
-      } else {
-        router.push(nextUrl, { scroll: false });
-      }
+      updateSearchParam(params, name, isDefaultValue ? undefined : serialized);
+      navigateWithParams(params);
     },
-    [defaultValue, equalityFn, name, pathname, replace, router, searchParams, serialize, value],
+    [defaultValue, equalityFn, name, navigateWithParams, searchParams, serialize, value],
   );
 
-  return [value, setValue] as const;
+  const setSearchState = useCallback(
+    (updates: SearchStateUpdates) => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      Object.entries(updates).forEach(([key, nextValue]) => {
+        updateSearchParam(params, key, nextValue);
+      });
+
+      navigateWithParams(params);
+    },
+    [navigateWithParams, searchParams],
+  );
+
+  return [value, setValue, setSearchState] as const;
 }

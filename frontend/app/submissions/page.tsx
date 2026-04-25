@@ -1,12 +1,19 @@
 'use client';
 
+import SearchIcon from '@mui/icons-material/Search';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import {
   Autocomplete,
   Box,
+  Button,
   Card,
   CardContent,
   Container,
+  FormControl,
+  InputAdornment,
+  InputLabel,
   MenuItem,
+  Select,
   Stack,
   TextField,
   Typography,
@@ -31,17 +38,17 @@ const STATUS_OPTIONS: { label: string; value: SubmissionStatus | '' }[] = [
 ];
 
 export default function SubmissionsPage() {
-  const [status, setStatus] = useSearchState<SubmissionStatus | undefined>({
+  const [status, , setSearchState] = useSearchState<SubmissionStatus | undefined>({
     name: 'status',
     ...searchStatePresets.string<SubmissionStatus>(),
   });
 
-  const [brokerId, setBrokerId] = useSearchState({
+  const [brokerId] = useSearchState({
     name: 'brokerId',
     ...searchStatePresets.number(),
   });
 
-  const [companyQuery, setCompanyQuery] = useSearchState({
+  const [companyQuery] = useSearchState({
     name: 'companySearch',
     ...searchStatePresets.string(),
   });
@@ -49,7 +56,7 @@ export default function SubmissionsPage() {
   const [companyInput, setCompanyInput] = useState(companyQuery ?? '');
   const debouncedCompanyInput = useDebounce(companyInput);
 
-  const [page, setPage] = useSearchState({
+  const [page] = useSearchState({
     name: 'page',
     defaultValue: 1,
     ...searchStatePresets.number(),
@@ -58,9 +65,11 @@ export default function SubmissionsPage() {
   useEffect(() => {
     if ((companyQuery ?? '') === debouncedCompanyInput) return;
 
-    setCompanyQuery(debouncedCompanyInput || undefined);
-    setPage(1);
-  }, [companyQuery, debouncedCompanyInput, setCompanyQuery, setPage]);
+    setSearchState({
+      companySearch: debouncedCompanyInput || undefined,
+      page: undefined,
+    });
+  }, [companyQuery, debouncedCompanyInput, setSearchState]);
 
   const filters = useMemo(
     () => ({
@@ -75,9 +84,8 @@ export default function SubmissionsPage() {
   const submissionsQuery = useSubmissionsList(filters);
   const brokerQuery = useBrokerOptions();
 
-  const resetPage = () => {
-    setPage(1);
-  };
+  const selectedBroker = brokerQuery.data?.find((broker) => broker.id === brokerId) ?? null;
+  const hasActiveFilters = Boolean(status || brokerId || companyInput);
 
   return (
     <Container sx={{ py: 6 }}>
@@ -92,50 +100,87 @@ export default function SubmissionsPage() {
         </Box>
 
         <Card variant="outlined">
-          <CardContent>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-              <TextField
-                select
-                label="Status"
-                value={status ?? ''}
-                onChange={(event) => {
-                  setStatus((event.target.value || undefined) as SubmissionStatus | undefined);
-                  resetPage();
-                }}
-                fullWidth
-              >
-                {STATUS_OPTIONS.map((option) => (
-                  <MenuItem key={option.value || 'all'} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
+          <CardContent sx={{ py: 2.5, '&:last-child': { pb: 2.5 } }}>
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              spacing={2}
+              alignItems={{ md: 'center' }}
+            >
+              <FormControl size="small" sx={{ minWidth: { md: 180 } }}>
+                <InputLabel id="status-filter-label">Status</InputLabel>
+                <Select
+                  labelId="status-filter-label"
+                  label="Status"
+                  value={status ?? ''}
+                  onChange={(event) => {
+                    setSearchState({
+                      status: event.target.value || undefined,
+                      page: undefined,
+                    });
+                  }}
+                >
+                  {STATUS_OPTIONS.map((option) => (
+                    <MenuItem key={option.value || 'all'} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
               <Autocomplete
-                fullWidth
+                size="small"
                 options={brokerQuery.data ?? []}
                 loading={brokerQuery.isLoading}
-                value={brokerQuery.data?.find((broker) => broker.id === brokerId) ?? null}
+                value={selectedBroker}
                 onChange={(_, broker) => {
-                  setBrokerId(broker?.id);
-                  resetPage();
+                  setSearchState({
+                    brokerId: broker?.id,
+                    page: undefined,
+                  });
                 }}
                 getOptionLabel={(broker) => broker.name}
                 isOptionEqualToValue={(option, value) => option.id === value.id}
                 renderInput={(params) => (
-                  <TextField {...params} label="Broker" helperText="Search and filter by broker" />
+                  <TextField {...params} label="Broker" placeholder="All brokers" />
                 )}
+                sx={{ minWidth: { md: 220 } }}
               />
 
               <TextField
-                label="Company search"
+                size="small"
+                placeholder="Search company..."
                 value={companyInput}
-                onChange={(event) => {
-                  setCompanyInput(event.target.value);
+                onChange={(event) => setCompanyInput(event.target.value)}
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                      </InputAdornment>
+                    ),
+                  },
                 }}
-                fullWidth
-                helperText="Search by company legal name"
+                sx={{ minWidth: { md: 260 }, flexGrow: 1, maxWidth: { md: 320 } }}
               />
+
+              <Button
+                variant="text"
+                size="small"
+                startIcon={<RestartAltIcon />}
+                disabled={!hasActiveFilters}
+                onClick={() => {
+                  setCompanyInput('');
+                  setSearchState({
+                    status: undefined,
+                    brokerId: undefined,
+                    companySearch: undefined,
+                    page: undefined,
+                  });
+                }}
+                sx={{ whiteSpace: 'nowrap', marginLeft: { md: 'auto !important' } }}
+              >
+                Clear
+              </Button>
             </Stack>
           </CardContent>
         </Card>
@@ -148,7 +193,9 @@ export default function SubmissionsPage() {
           isLoading={submissionsQuery.isLoading}
           error={submissionsQuery.error ? 'Failed to load submissions.' : null}
           onRetryAction={() => submissionsQuery.refetch()}
-          onPageChangeAction={setPage}
+          onPageChangeAction={(nextPage) => {
+            setSearchState({ page: nextPage });
+          }}
         />
       </Stack>
     </Container>
