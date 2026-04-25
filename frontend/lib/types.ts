@@ -106,4 +106,8 @@ export interface SubmissionListFilters extends PaginationRequest {
   brokerId?: string;
   companySearch?: string;
   ordering?: SubmissionOrdering;
+  createdFrom?: string;
+  createdTo?: string;
+  hasDocuments?: boolean;
+  hasNotes?: boolean;
 }

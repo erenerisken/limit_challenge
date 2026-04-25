@@ -1,14 +1,17 @@
 'use client';
 
-import SearchIcon from '@mui/icons-material/Search';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import SearchIcon from '@mui/icons-material/Search';
 import {
   Autocomplete,
   Box,
   Button,
   Card,
   CardContent,
+  Collapse,
   Container,
+  Divider,
   FormControl,
   InputAdornment,
   InputLabel,
@@ -37,7 +40,21 @@ const STATUS_OPTIONS: { label: string; value: SubmissionStatus | '' }[] = [
   { label: 'Lost', value: 'lost' },
 ];
 
+function getBooleanSelectValue(value?: boolean) {
+  if (value === true) return 'yes';
+  if (value === false) return 'no';
+  return 'any';
+}
+
+function parseBooleanSelectValue(value: string) {
+  if (value === 'yes') return true;
+  if (value === 'no') return false;
+  return undefined;
+}
+
 export default function SubmissionsPage() {
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
   const [status, , setSearchState] = useSearchState<SubmissionStatus | undefined>({
     name: 'status',
     ...searchStatePresets.string<SubmissionStatus>(),
@@ -53,9 +70,29 @@ export default function SubmissionsPage() {
     ...searchStatePresets.string(),
   });
 
-  const [ordering, setOrdering] = useSearchState<SubmissionOrdering | undefined>({
+  const [ordering] = useSearchState<SubmissionOrdering | undefined>({
     name: 'ordering',
     ...searchStatePresets.string<SubmissionOrdering>(),
+  });
+
+  const [createdFrom] = useSearchState({
+    name: 'createdFrom',
+    ...searchStatePresets.string(),
+  });
+
+  const [createdTo] = useSearchState({
+    name: 'createdTo',
+    ...searchStatePresets.string(),
+  });
+
+  const [hasDocuments] = useSearchState({
+    name: 'hasDocuments',
+    ...searchStatePresets.boolean(),
+  });
+
+  const [hasNotes] = useSearchState({
+    name: 'hasNotes',
+    ...searchStatePresets.boolean(),
   });
 
   const [companyInput, setCompanyInput] = useState(companyQuery ?? '');
@@ -83,15 +120,59 @@ export default function SubmissionsPage() {
       companySearch: companyQuery,
       page,
       ordering,
+      createdFrom,
+      createdTo,
+      hasDocuments,
+      hasNotes,
     }),
-    [status, brokerId, companyQuery, page, ordering],
+    [
+      status,
+      brokerId,
+      companyQuery,
+      page,
+      ordering,
+      createdFrom,
+      createdTo,
+      hasDocuments,
+      hasNotes,
+    ],
   );
 
   const submissionsQuery = useSubmissionsList(filters);
   const brokerQuery = useBrokerOptions();
 
   const selectedBroker = brokerQuery.data?.find((broker) => broker.id === brokerId) ?? null;
-  const hasActiveFilters = Boolean(status || brokerId || companyInput);
+
+  const activeAdvancedFilters = [
+    createdFrom,
+    createdTo,
+    hasDocuments !== undefined,
+    hasNotes !== undefined,
+  ].filter(Boolean).length;
+
+  const hasActiveFilters = Boolean(
+    status ||
+    brokerId ||
+    companyInput ||
+    createdFrom ||
+    createdTo ||
+    hasDocuments !== undefined ||
+    hasNotes !== undefined,
+  );
+
+  const clearFilters = () => {
+    setCompanyInput('');
+    setSearchState({
+      status: undefined,
+      brokerId: undefined,
+      companySearch: undefined,
+      createdFrom: undefined,
+      createdTo: undefined,
+      hasDocuments: undefined,
+      hasNotes: undefined,
+      page: undefined,
+    });
+  };
 
   return (
     <Container sx={{ py: 4 }}>
@@ -106,88 +187,191 @@ export default function SubmissionsPage() {
         </Box>
 
         <Card variant="outlined">
-          <CardContent sx={{ py: 2.5, '&:last-child': { pb: 2.5 } }}>
-            <Stack
-              direction={{ xs: 'column', md: 'row' }}
-              spacing={2}
-              alignItems={{ md: 'center' }}
-            >
-              <FormControl size="small" sx={{ minWidth: { md: 180 } }}>
-                <InputLabel id="status-filter-label">Status</InputLabel>
-                <Select
-                  labelId="status-filter-label"
-                  label="Status"
-                  value={status ?? ''}
-                  onChange={(event) => {
+          <CardContent sx={{ py: 2.5 }}>
+            <Stack>
+              <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                spacing={2}
+                alignItems={{ md: 'center' }}
+              >
+                <FormControl size="small" sx={{ minWidth: { md: 180 } }}>
+                  <InputLabel id="status-filter-label">Status</InputLabel>
+                  <Select
+                    labelId="status-filter-label"
+                    label="Status"
+                    value={status ?? ''}
+                    onChange={(event) => {
+                      setSearchState({
+                        status: event.target.value || undefined,
+                        page: undefined,
+                      });
+                    }}
+                  >
+                    {STATUS_OPTIONS.map((option) => (
+                      <MenuItem key={option.value || 'all'} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                <Autocomplete
+                  size="small"
+                  fullWidth
+                  options={brokerQuery.data ?? []}
+                  loading={brokerQuery.isLoading}
+                  value={selectedBroker}
+                  onChange={(_, broker) => {
                     setSearchState({
-                      status: event.target.value || undefined,
+                      brokerId: broker?.id,
                       page: undefined,
                     });
                   }}
-                >
-                  {STATUS_OPTIONS.map((option) => (
-                    <MenuItem key={option.value || 'all'} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                  getOptionLabel={(broker) => broker.name}
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Broker" fullWidth placeholder="All brokers" />
+                  )}
+                  sx={{ minWidth: { md: 220 }, maxWidth: { md: 280 } }}
+                />
 
-              <Autocomplete
-                size="small"
-                fullWidth
-                options={brokerQuery.data ?? []}
-                loading={brokerQuery.isLoading}
-                value={selectedBroker}
-                onChange={(_, broker) => {
-                  setSearchState({
-                    brokerId: broker?.id,
-                    page: undefined,
-                  });
-                }}
-                getOptionLabel={(broker) => broker.name}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                renderInput={(params) => (
-                  <TextField {...params} label="Broker" fullWidth placeholder="All brokers" />
-                )}
-                sx={{ minWidth: { md: 220 }, maxWidth: { md: 280 } }}
-              />
+                <TextField
+                  size="small"
+                  placeholder="Search company..."
+                  value={companyInput}
+                  onChange={(event) => setCompanyInput(event.target.value)}
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                  sx={{ minWidth: { md: 260 }, flexGrow: 1, maxWidth: { md: 320 } }}
+                />
 
-              <TextField
-                size="small"
-                placeholder="Search company..."
-                value={companyInput}
-                onChange={(event) => setCompanyInput(event.target.value)}
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-                sx={{ minWidth: { md: 260 }, flexGrow: 1, maxWidth: { md: 320 } }}
-              />
+                <Stack direction="row" flex={1} spacing={1} justifyContent="space-between">
+                  <Button
+                    variant="text"
+                    size="small"
+                    endIcon={
+                      <ExpandMoreIcon
+                        sx={{
+                          transform: showAdvanced ? 'rotate(180deg)' : 'rotate(0deg)',
+                          transition: 'transform 0.2s ease',
+                        }}
+                      />
+                    }
+                    onClick={() => setShowAdvanced((value) => !value)}
+                    sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}
+                  >
+                    Advanced {activeAdvancedFilters > 0 && `(${activeAdvancedFilters})`}
+                  </Button>
 
-              <Button
-                variant="text"
-                size="small"
-                startIcon={<RestartAltIcon />}
-                disabled={!hasActiveFilters}
-                onClick={() => {
-                  setCompanyInput('');
-                  setSearchState({
-                    status: undefined,
-                    brokerId: undefined,
-                    companySearch: undefined,
-                    page: undefined,
-                  });
-                }}
-                sx={{ whiteSpace: 'nowrap', marginLeft: { md: 'auto !important' } }}
-              >
-                Clear
-              </Button>
+                  <Button
+                    variant="text"
+                    size="small"
+                    startIcon={<RestartAltIcon />}
+                    disabled={!hasActiveFilters}
+                    onClick={clearFilters}
+                    sx={{ whiteSpace: 'nowrap' }}
+                  >
+                    Clear
+                  </Button>
+                </Stack>
+              </Stack>
+
+              <Collapse in={showAdvanced}>
+                <Box sx={{ mt: 2, pt: 1 }}>
+                  <Stack
+                    direction={{ xs: 'column', md: 'row' }}
+                    spacing={2}
+                    alignItems={{ md: 'center' }}
+                  >
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                      <TextField
+                        size="small"
+                        type="date"
+                        label="Created from"
+                        value={createdFrom ?? ''}
+                        onChange={(event) => {
+                          setSearchState({
+                            createdFrom: event.target.value || undefined,
+                            page: undefined,
+                          });
+                        }}
+                        slotProps={{
+                          inputLabel: { shrink: true },
+                        }}
+                        sx={{ width: { sm: 170 } }}
+                      />
+
+                      <TextField
+                        size="small"
+                        type="date"
+                        label="Created to"
+                        value={createdTo ?? ''}
+                        onChange={(event) => {
+                          setSearchState({
+                            createdTo: event.target.value || undefined,
+                            page: undefined,
+                          });
+                        }}
+                        slotProps={{
+                          inputLabel: { shrink: true },
+                        }}
+                        sx={{ width: { sm: 170 } }}
+                      />
+                    </Stack>
+
+                    <Divider
+                      orientation="vertical"
+                      flexItem
+                      sx={{ display: { xs: 'none', md: 'block' } }}
+                    />
+
+                    <FormControl size="small" sx={{ minWidth: { md: 150 } }}>
+                      <InputLabel id="has-documents-label">Has documents</InputLabel>
+                      <Select
+                        labelId="has-documents-label"
+                        label="Has documents"
+                        value={getBooleanSelectValue(hasDocuments)}
+                        onChange={(event) => {
+                          setSearchState({
+                            hasDocuments: parseBooleanSelectValue(event.target.value),
+                            page: undefined,
+                          });
+                        }}
+                      >
+                        <MenuItem value="any">Any</MenuItem>
+                        <MenuItem value="yes">Yes</MenuItem>
+                        <MenuItem value="no">No</MenuItem>
+                      </Select>
+                    </FormControl>
+
+                    <FormControl size="small" sx={{ minWidth: { md: 130 } }}>
+                      <InputLabel id="has-notes-label">Has notes</InputLabel>
+                      <Select
+                        labelId="has-notes-label"
+                        label="Has notes"
+                        value={getBooleanSelectValue(hasNotes)}
+                        onChange={(event) => {
+                          setSearchState({
+                            hasNotes: parseBooleanSelectValue(event.target.value),
+                            page: undefined,
+                          });
+                        }}
+                      >
+                        <MenuItem value="any">Any</MenuItem>
+                        <MenuItem value="yes">Yes</MenuItem>
+                        <MenuItem value="no">No</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Stack>
+                </Box>
+              </Collapse>
             </Stack>
           </CardContent>
         </Card>
@@ -204,7 +388,12 @@ export default function SubmissionsPage() {
             setSearchState({ page: nextPage });
           }}
           ordering={ordering}
-          onOrderingChangeAction={setOrdering}
+          onOrderingChangeAction={(nextOrdering) => {
+            setSearchState({
+              ordering: nextOrdering,
+              page: undefined,
+            });
+          }}
         />
       </Stack>
     </Container>

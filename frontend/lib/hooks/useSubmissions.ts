@@ -20,6 +20,10 @@ async function fetchSubmissions(filters: SubmissionListFilters) {
       companySearch: filters.companySearch,
       page: filters.page,
       ordering: filters.ordering,
+      createdFrom: filters.createdFrom,
+      createdTo: filters.createdTo,
+      hasDocuments: filters.hasDocuments,
+      hasNotes: filters.hasNotes,
     },
   });
   return response.data;
