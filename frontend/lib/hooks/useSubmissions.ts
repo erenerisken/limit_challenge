@@ -19,6 +19,7 @@ async function fetchSubmissions(filters: SubmissionListFilters) {
       status: filters.status,
       brokerId: filters.brokerId,
       companySearch: filters.companySearch,
+      page: filters.page,
     },
   });
   return response.data;
@@ -37,7 +38,6 @@ export function useSubmissionsList(filters: SubmissionListFilters) {
   return useQuery({
     queryKey: [SUBMISSIONS_QUERY_KEY, filters] as QueryKey,
     queryFn: () => fetchSubmissions(filters),
-    enabled: false,
   });
 }
 
@@ -48,8 +48,4 @@ export function useSubmissionDetail(id: string | number) {
     enabled: false,
     staleTime: 60_000,
   });
-}
-
-export function useSubmissionQueryKey(filters: SubmissionListFilters) {
-  return useMemo(() => [SUBMISSIONS_QUERY_KEY, filters] as QueryKey, [filters]);
 }

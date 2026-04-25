@@ -6,7 +6,6 @@ import {
   Card,
   CardContent,
   Container,
-  Divider,
   MenuItem,
   Stack,
   TextField,
@@ -14,10 +13,13 @@ import {
 } from '@mui/material';
 import { useMemo } from 'react';
 
-import { searchStatePresets, useSearchState } from '@/lib/hooks/useSearchState';
+import { SubmissionsTable } from '@/components/submissions/submissions-table';
 import { useBrokerOptions } from '@/lib/hooks/useBrokerOptions';
+import { searchStatePresets, useSearchState } from '@/lib/hooks/useSearchState';
 import { useSubmissionsList } from '@/lib/hooks/useSubmissions';
 import { SubmissionStatus } from '@/lib/types';
+
+const ROWS_PER_PAGE = 10;
 
 const STATUS_OPTIONS: { label: string; value: SubmissionStatus | '' }[] = [
   { label: 'All statuses', value: '' },
@@ -43,27 +45,38 @@ export default function SubmissionsPage() {
     ...searchStatePresets.string(),
   });
 
+  const [page, setPage] = useSearchState({
+    name: 'page',
+    defaultValue: 1,
+    ...searchStatePresets.number(),
+  });
+
   const filters = useMemo(
     () => ({
       status,
       brokerId: brokerId ? String(brokerId) : undefined,
       companySearch: companyQuery,
+      page,
     }),
-    [status, brokerId, companyQuery],
+    [status, brokerId, companyQuery, page],
   );
 
   const submissionsQuery = useSubmissionsList(filters);
   const brokerQuery = useBrokerOptions();
 
+  const resetPage = () => {
+    setPage(1);
+  };
+
   return (
-    <Container maxWidth="lg" sx={{ py: 6 }}>
+    <Container sx={{ py: 6 }}>
       <Stack spacing={4}>
         <Box>
           <Typography variant="h4" component="h1">
             Submissions
           </Typography>
           <Typography color="text.secondary">
-            Filters are synced with the URL and drive backend filtering.
+            Review broker-submitted opportunities and filter by status, broker, or company.
           </Typography>
         </Box>
 
@@ -74,9 +87,10 @@ export default function SubmissionsPage() {
                 select
                 label="Status"
                 value={status ?? ''}
-                onChange={(event) =>
-                  setStatus((event.target.value || undefined) as SubmissionStatus | undefined)
-                }
+                onChange={(event) => {
+                  setStatus((event.target.value || undefined) as SubmissionStatus | undefined);
+                  resetPage();
+                }}
                 fullWidth
               >
                 {STATUS_OPTIONS.map((option) => (
@@ -89,50 +103,45 @@ export default function SubmissionsPage() {
               <Autocomplete
                 fullWidth
                 options={brokerQuery.data ?? []}
-                disabled={brokerQuery.isLoading}
+                loading={brokerQuery.isLoading}
                 value={brokerQuery.data?.find((broker) => broker.id === brokerId) ?? null}
                 onChange={(_, broker) => {
                   setBrokerId(broker?.id);
+                  resetPage();
                 }}
                 getOptionLabel={(broker) => broker.name}
                 isOptionEqualToValue={(option, value) => option.id === value.id}
                 renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Broker"
-                    helperText="Search and filter by broker"
-                    fullWidth
-                  />
+                  <TextField {...params} label="Broker" helperText="Search and filter by broker" />
                 )}
               />
 
               <TextField
                 label="Company search"
                 value={companyQuery ?? ''}
-                onChange={(event) => setCompanyQuery(event.target.value || undefined)}
+                onChange={(event) => {
+                  setCompanyQuery(event.target.value || undefined);
+                  resetPage();
+                }}
                 fullWidth
-                helperText="Send as ?companySearch=..."
+                helperText="Search by company legal name"
               />
             </Stack>
           </CardContent>
         </Card>
 
-        <Card variant="outlined">
-          <CardContent>
-            <Stack spacing={2}>
-              <Typography variant="h6">Submission list</Typography>
-              <Typography color="text.secondary">
-                Hook `submissionsQuery` to render rows, totals, and pagination states.
-              </Typography>
-              <Divider />
-              <Box>
-                <pre style={{ margin: 0, fontSize: 14 }}>
-                  {JSON.stringify({ filters }, null, 2)}
-                </pre>
-              </Box>
-            </Stack>
-          </CardContent>
-        </Card>
+        <Stack>
+          <SubmissionsTable
+            submissions={submissionsQuery.data?.results ?? []}
+            totalCount={submissionsQuery.data?.count ?? 0}
+            page={page ?? 1}
+            rowsPerPage={ROWS_PER_PAGE}
+            isLoading={submissionsQuery.isLoading}
+            error={submissionsQuery.error ? 'Failed to load submissions.' : null}
+            onRetryAction={() => submissionsQuery.refetch()}
+            onPageChangeAction={setPage}
+          />
+        </Stack>
       </Stack>
     </Container>
   );

@@ -73,6 +73,10 @@ export interface SubmissionDetail extends Omit<
   notes: NoteDetail[];
 }
 
+export interface PaginationRequest {
+  page?: number;
+}
+
 export interface PaginatedResponse<T> {
   count: number;
   next: string | null;
@@ -80,7 +84,7 @@ export interface PaginatedResponse<T> {
   results: T[];
 }
 
-export interface SubmissionListFilters {
+export interface SubmissionListFilters extends PaginationRequest {
   status?: SubmissionStatus;
   brokerId?: string;
   companySearch?: string;
