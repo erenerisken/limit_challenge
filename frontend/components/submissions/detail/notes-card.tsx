@@ -2,7 +2,7 @@ import { Avatar, Card, Chip, Stack, Typography } from '@mui/material';
 
 import type { SubmissionDetail } from '@/lib/types';
 import { formatDateTime } from '@/lib/utils/date';
-import { getInitials } from '@/lib/utils/string';
+import { getAvatarProps } from '@/lib/utils/avatar';
 
 type NotesCardProps = {
   notes: SubmissionDetail['notes'];
@@ -24,28 +24,33 @@ export function NotesCard({ notes }: NotesCardProps) {
         </Typography>
       ) : (
         <Stack spacing={2}>
-          {notes.map((note) => (
-            <Stack key={note.id} direction="row" spacing={2}>
-              <Avatar sx={{ width: 32, height: 32, fontSize: 13 }}>
-                {getInitials(note.authorName)}
-              </Avatar>
+          {notes.map((note) => {
+            const avatarProps = getAvatarProps(note.authorName);
 
-              <Stack spacing={0.5} sx={{ flex: 1 }}>
-                <Stack direction="row" spacing={1} alignItems="baseline" flexWrap="wrap">
-                  <Typography variant="body2" fontWeight={600}>
-                    {note.authorName}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {formatDateTime(note.createdAt)}
+            return (
+              <Stack key={note.id} direction="row" spacing={1.5}>
+                <Avatar
+                  {...avatarProps}
+                  sx={{ ...avatarProps.sx, width: 32, height: 32, fontSize: 13 }}
+                />
+
+                <Stack sx={{ flex: 1 }}>
+                  <Stack direction="row" spacing={1} alignItems="baseline" flexWrap="wrap">
+                    <Typography variant="body2" fontWeight={600}>
+                      {note.authorName}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {formatDateTime(note.createdAt)}
+                    </Typography>
+                  </Stack>
+
+                  <Typography variant="body2" color="text.secondary">
+                    {note.body}
                   </Typography>
                 </Stack>
-
-                <Typography variant="body2" color="text.secondary">
-                  {note.body}
-                </Typography>
               </Stack>
-            </Stack>
-          ))}
+            );
+          })}
         </Stack>
       )}
     </Card>

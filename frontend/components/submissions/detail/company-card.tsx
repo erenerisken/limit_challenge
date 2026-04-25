@@ -10,7 +10,7 @@ type CompanyCardProps = {
 export function CompanyCard({ company }: CompanyCardProps) {
   return (
     <Card variant="outlined" sx={{ p: 3 }}>
-      <Stack direction="row" spacing={1} alignItems="center" mb={2}>
+      <Stack direction="row" spacing={0.5} alignItems="center" mb={2}>
         <BusinessIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
         <Typography variant="h6" fontWeight={600}>
           Company
