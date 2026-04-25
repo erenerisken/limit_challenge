@@ -27,6 +27,7 @@ import type { SubmissionListItem, SubmissionOrdering } from '@/lib/types';
 
 import { PriorityChip } from './priority-chip';
 import { StatusChip } from './status-chip';
+import { formatDate } from '@/lib/utils/date';
 
 const TABLE_ROW_HEIGHT = 75;
 
@@ -66,14 +67,6 @@ function isSortActive(field: SubmissionOrdering, ordering?: SubmissionOrdering) 
 
 function getSortDirection(field: SubmissionOrdering, ordering?: SubmissionOrdering) {
   return ordering === `-${field}` ? 'desc' : 'asc';
-}
-
-function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
 }
 
 function LoadingState() {

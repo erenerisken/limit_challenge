@@ -5,11 +5,9 @@ import { useParams, useRouter } from 'next/navigation';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 import { useSubmissionDetail } from '@/lib/hooks/useSubmissions';
-import {
-  SubmissionDetailView,
-  SubmissionDetailViewError,
-  SubmissionDetailViewPlaceholder,
-} from '@/components/submissions/submission-detail-view';
+import { SubmissionDetailView } from '@/components/submissions/detail/submission-detail-view';
+import { SubmissionDetailViewPlaceholder } from '@/components/submissions/detail/submission-detail-placeholder';
+import { SubmissionDetailError } from '@/components/submissions/detail/submission-detail-error';
 
 export default function SubmissionDetailPage() {
   const router = useRouter();
@@ -24,7 +22,7 @@ export default function SubmissionDetailPage() {
   if (detailQuery.isLoading) {
     content = <SubmissionDetailViewPlaceholder />;
   } else if (detailQuery.error) {
-    content = <SubmissionDetailViewError onRetryAction={detailQuery.refetch} />;
+    content = <SubmissionDetailError onRetryAction={detailQuery.refetch} />;
   } else if (detailQuery.data) {
     content = <SubmissionDetailView submission={detailQuery.data} />;
   }

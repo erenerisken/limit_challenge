@@ -1,35 +1,4 @@
-import { Alert, Box, Button, Card, Skeleton, Stack } from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import { SubmissionDetail } from '@/lib/types';
-
-export function SubmissionDetailView({ submission }: { submission: SubmissionDetail }) {
-  return <Box></Box>;
-}
-
-type SubmissionDetailViewErrorProps = {
-  message?: string;
-  onRetryAction?: () => void;
-};
-
-export function SubmissionDetailViewError({
-  message = 'Failed to load submission details.',
-  onRetryAction,
-}: SubmissionDetailViewErrorProps) {
-  return (
-    <Alert
-      severity="error"
-      action={
-        onRetryAction ? (
-          <Button color="inherit" size="small" startIcon={<RefreshIcon />} onClick={onRetryAction}>
-            Retry
-          </Button>
-        ) : undefined
-      }
-    >
-      {message}
-    </Alert>
-  );
-}
+import { Box, Card, Skeleton, Stack } from '@mui/material';
 
 export function SubmissionDetailViewPlaceholder() {
   return (
