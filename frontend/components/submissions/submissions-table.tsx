@@ -14,6 +14,7 @@ import {
   TableHead,
   TablePagination,
   TableRow,
+  TableSortLabel,
   Typography,
 } from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -22,7 +23,7 @@ import InboxIcon from '@mui/icons-material/Inbox';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useRouter } from 'next/navigation';
 
-import type { SubmissionListItem } from '@/lib/types';
+import type { SubmissionListItem, SubmissionOrdering } from '@/lib/types';
 
 import { PriorityChip } from './priority-chip';
 import { StatusChip } from './status-chip';
@@ -34,9 +35,36 @@ type SubmissionsTableProps = {
   rowsPerPage: number;
   isLoading: boolean;
   error: string | null;
+  ordering?: SubmissionOrdering;
+  onOrderingChangeAction: (ordering: SubmissionOrdering) => void;
   onPageChangeAction: (page: number) => void;
   onRetryAction?: () => void;
 };
+
+const SORTABLE_COLUMNS: Partial<Record<string, SubmissionOrdering>> = {
+  Company: 'company__legal_name',
+  Broker: 'broker__name',
+  Status: 'status',
+  Priority: 'priority_order',
+  Docs: 'document_count',
+  Notes: 'note_count',
+  Created: 'created_at',
+};
+
+function getNextOrdering(
+  field: SubmissionOrdering,
+  current?: SubmissionOrdering,
+): SubmissionOrdering {
+  return current === field ? (`-${field}` as SubmissionOrdering) : field;
+}
+
+function isSortActive(field: SubmissionOrdering, ordering?: SubmissionOrdering) {
+  return ordering === field || ordering === `-${field}`;
+}
+
+function getSortDirection(field: SubmissionOrdering, ordering?: SubmissionOrdering) {
+  return ordering === `-${field}` ? 'desc' : 'asc';
+}
 
 function formatDate(dateString: string) {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -117,6 +145,8 @@ export function SubmissionsTable({
   rowsPerPage,
   isLoading,
   error,
+  ordering,
+  onOrderingChangeAction,
   onPageChangeAction,
   onRetryAction,
 }: SubmissionsTableProps) {
@@ -144,14 +174,30 @@ export function SubmissionsTable({
                   'Docs',
                   'Notes',
                   'Created',
-                ].map((label) => (
-                  <TableCell
-                    key={label}
-                    sx={{ fontWeight: 600, color: 'text.secondary', fontSize: 13 }}
-                  >
-                    {label}
-                  </TableCell>
-                ))}
+                ].map((label) => {
+                  const sortField = SORTABLE_COLUMNS[label];
+
+                  return (
+                    <TableCell
+                      key={label}
+                      sx={{ fontWeight: 600, color: 'text.secondary', fontSize: 13 }}
+                    >
+                      {sortField ? (
+                        <TableSortLabel
+                          active={isSortActive(sortField, ordering)}
+                          direction={getSortDirection(sortField, ordering)}
+                          onClick={() =>
+                            onOrderingChangeAction(getNextOrdering(sortField, ordering))
+                          }
+                        >
+                          {label}
+                        </TableSortLabel>
+                      ) : (
+                        label
+                      )}
+                    </TableCell>
+                  );
+                })}
               </TableRow>
             </TableHead>
 

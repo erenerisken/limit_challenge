@@ -3,7 +3,12 @@
 import { QueryKey, useQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@/lib/api-client';
-import { PaginatedResponse, SubmissionDetail, SubmissionListFilters, SubmissionListItem, } from '@/lib/types';
+import {
+  PaginatedResponse,
+  SubmissionDetail,
+  SubmissionListFilters,
+  SubmissionListItem,
+} from '@/lib/types';
 
 const SUBMISSIONS_QUERY_KEY = 'submissions';
 
@@ -14,6 +19,7 @@ async function fetchSubmissions(filters: SubmissionListFilters) {
       brokerId: filters.brokerId,
       companySearch: filters.companySearch,
       page: filters.page,
+      ordering: filters.ordering,
     },
   });
   return response.data;

@@ -25,7 +25,7 @@ import { useBrokerOptions } from '@/lib/hooks/useBrokerOptions';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { searchStatePresets, useSearchState } from '@/lib/hooks/useSearchState';
 import { useSubmissionsList } from '@/lib/hooks/useSubmissions';
-import { SubmissionStatus } from '@/lib/types';
+import { SubmissionOrdering, SubmissionStatus } from '@/lib/types';
 
 const ROWS_PER_PAGE = 10;
 
@@ -53,6 +53,11 @@ export default function SubmissionsPage() {
     ...searchStatePresets.string(),
   });
 
+  const [ordering, setOrdering] = useSearchState<SubmissionOrdering | undefined>({
+    name: 'ordering',
+    ...searchStatePresets.string<SubmissionOrdering>(),
+  });
+
   const [companyInput, setCompanyInput] = useState(companyQuery ?? '');
   const debouncedCompanyInput = useDebounce(companyInput);
 
@@ -77,8 +82,9 @@ export default function SubmissionsPage() {
       brokerId: brokerId ? String(brokerId) : undefined,
       companySearch: companyQuery,
       page,
+      ordering,
     }),
-    [status, brokerId, companyQuery, page],
+    [status, brokerId, companyQuery, page, ordering],
   );
 
   const submissionsQuery = useSubmissionsList(filters);
@@ -196,6 +202,8 @@ export default function SubmissionsPage() {
           onPageChangeAction={(nextPage) => {
             setSearchState({ page: nextPage });
           }}
+          ordering={ordering}
+          onOrderingChangeAction={setOrdering}
         />
       </Stack>
     </Container>

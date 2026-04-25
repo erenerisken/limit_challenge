@@ -83,9 +83,27 @@ export interface PaginatedResponse<T> {
   previous: string | null;
   results: T[];
 }
+export type SubmissionOrdering =
+  | 'created_at'
+  | '-created_at'
+  | 'updated_at'
+  | '-updated_at'
+  | 'priority_order'
+  | '-priority_order'
+  | 'status'
+  | '-status'
+  | 'company__legal_name'
+  | '-company__legal_name'
+  | 'broker__name'
+  | '-broker__name'
+  | 'document_count'
+  | '-document_count'
+  | 'note_count'
+  | '-note_count';
 
 export interface SubmissionListFilters extends PaginationRequest {
   status?: SubmissionStatus;
   brokerId?: string;
   companySearch?: string;
+  ordering?: SubmissionOrdering;
 }
