@@ -28,6 +28,8 @@ import type { SubmissionListItem, SubmissionOrdering } from '@/lib/types';
 import { PriorityChip } from './priority-chip';
 import { StatusChip } from './status-chip';
 
+const TABLE_ROW_HEIGHT = 75;
+
 type SubmissionsTableProps = {
   submissions: SubmissionListItem[];
   totalCount: number;
@@ -78,10 +80,10 @@ function LoadingState() {
   return (
     <>
       {Array.from({ length: 5 }).map((_, index) => (
-        <TableRow key={index}>
+        <TableRow key={index} sx={{ height: TABLE_ROW_HEIGHT }}>
           {Array.from({ length: 8 }).map((__, cellIndex) => (
             <TableCell key={cellIndex}>
-              <Skeleton variant="text" />
+              <Skeleton variant="text" height={24} />
             </TableCell>
           ))}
         </TableRow>
@@ -154,11 +156,15 @@ export function SubmissionsTable({
 
   return (
     <Stack spacing={1}>
-      {!isLoading && !error && (
-        <Typography variant="body2" color="text.secondary">
-          Showing {submissions.length} of {totalCount} submissions
-        </Typography>
-      )}
+      <Box minHeight={20}>
+        {isLoading ? (
+          <Skeleton width={180} height={20} />
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            Showing {submissions.length} of {totalCount} submissions
+          </Typography>
+        )}
+      </Box>
 
       <Card variant="outlined">
         <TableContainer sx={{ overflowX: 'auto' }}>
@@ -214,7 +220,11 @@ export function SubmissionsTable({
                     key={submission.id}
                     hover
                     onClick={() => router.push(`/submissions/${submission.id}`)}
-                    sx={{ cursor: 'pointer', '&:last-child td': { borderBottom: 0 } }}
+                    sx={{
+                      height: TABLE_ROW_HEIGHT,
+                      cursor: 'pointer',
+                      '&:last-child td': { borderBottom: 0 },
+                    }}
                   >
                     <TableCell>
                       <Stack spacing={0.25}>
