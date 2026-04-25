@@ -219,8 +219,11 @@ export function SubmissionsTable({
                   <TableRow
                     key={submission.id}
                     hover
-                    onClick={() => router.push(`/submissions/${submission.id}`)}
+                    onClick={() =>
+                      router.push(`/submissions/${submission.id}${window.location.search}`)
+                    }
                     sx={{
+                      transition: 'background-color 0.25s ease',
                       height: TABLE_ROW_HEIGHT,
                       cursor: 'pointer',
                       '&:last-child td': { borderBottom: 0 },

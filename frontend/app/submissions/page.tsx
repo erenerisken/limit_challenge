@@ -94,7 +94,7 @@ export default function SubmissionsPage() {
   const hasActiveFilters = Boolean(status || brokerId || companyInput);
 
   return (
-    <Container sx={{ py: 6 }}>
+    <Container sx={{ py: 4 }}>
       <Stack spacing={4}>
         <Box>
           <Typography variant="h4" component="h1">
@@ -135,6 +135,7 @@ export default function SubmissionsPage() {
 
               <Autocomplete
                 size="small"
+                fullWidth
                 options={brokerQuery.data ?? []}
                 loading={brokerQuery.isLoading}
                 value={selectedBroker}
@@ -147,9 +148,9 @@ export default function SubmissionsPage() {
                 getOptionLabel={(broker) => broker.name}
                 isOptionEqualToValue={(option, value) => option.id === value.id}
                 renderInput={(params) => (
-                  <TextField {...params} label="Broker" placeholder="All brokers" />
+                  <TextField {...params} label="Broker" fullWidth placeholder="All brokers" />
                 )}
-                sx={{ minWidth: { md: 220 } }}
+                sx={{ minWidth: { md: 220 }, maxWidth: { md: 280 } }}
               />
 
               <TextField
