@@ -4,6 +4,8 @@ import { Avatar, Card, Stack, Typography } from '@mui/material';
 import type { SubmissionDetail } from '@/lib/types';
 import { getAvatarProps } from '@/lib/utils/avatar';
 
+import { ContactValueLink } from './contact-value-link';
+
 type OwnerCardProps = {
   owner: SubmissionDetail['owner'];
 };
@@ -27,9 +29,12 @@ export function OwnerCard({ owner }: OwnerCardProps) {
           <Typography variant="body2" fontWeight={500}>
             {owner.fullName}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {owner.email}
-          </Typography>
+          <ContactValueLink
+            type="email"
+            value={owner.email}
+            variant="caption"
+            color="text.secondary"
+          />
         </Stack>
       </Stack>
     </Card>

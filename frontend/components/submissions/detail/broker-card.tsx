@@ -3,6 +3,8 @@ import { Card, Stack, Typography } from '@mui/material';
 
 import type { SubmissionDetail } from '@/lib/types';
 
+import { ContactValueLink } from './contact-value-link';
+
 type BrokerCardProps = {
   broker: SubmissionDetail['broker'];
 };
@@ -22,9 +24,12 @@ export function BrokerCard({ broker }: BrokerCardProps) {
         {broker.primaryContactEmail ? (
           <Stack direction="row" spacing={1} alignItems="center">
             <EmailIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-            <Typography variant="body2" color="text.secondary">
-              {broker.primaryContactEmail}
-            </Typography>
+            <ContactValueLink
+              type="email"
+              value={broker.primaryContactEmail}
+              variant="body2"
+              color="text.secondary"
+            />
           </Stack>
         ) : (
           <Typography variant="body2" color="text.secondary">

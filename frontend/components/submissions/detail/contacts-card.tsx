@@ -4,6 +4,8 @@ import { Card, Divider, Stack, Typography } from '@mui/material';
 
 import type { SubmissionDetail } from '@/lib/types';
 
+import { ContactValueLink } from './contact-value-link';
+
 type ContactsCardProps = {
   contacts: SubmissionDetail['contacts'];
 };
@@ -35,16 +37,24 @@ export function ContactsCard({ contacts }: ContactsCardProps) {
               <Stack spacing={0.5}>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <EmailIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: 13 }}>
-                    {contact.email}
-                  </Typography>
+                  <ContactValueLink
+                    type="email"
+                    value={contact.email}
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontSize: 13 }}
+                  />
                 </Stack>
 
                 <Stack direction="row" spacing={1} alignItems="center">
                   <PhoneIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: 13 }}>
-                    {contact.phone}
-                  </Typography>
+                  <ContactValueLink
+                    type="phone"
+                    value={contact.phone}
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontSize: 13 }}
+                  />
                 </Stack>
               </Stack>
             </Stack>
