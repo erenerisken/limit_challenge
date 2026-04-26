@@ -2,23 +2,30 @@
 
 A full-stack submissions management dashboard built with **Django (DRF)** and **Next.js (App Router)**.
 
-This project focuses on building a **realistic operational workflow** rather than a feature-heavy demo. The core experience centers around reviewing, filtering, and inspecting broker-submitted opportunities efficiently.
+This project focuses on modeling a **realistic operations workflow** rather than a feature-heavy demo. The goal is to enable users to efficiently review, filter, and inspect broker-submitted opportunities with a clear and consistent experience.
 
 ---
 
-## Demo
+## Live Demo
 
-*Loom video coming soon*
+* **Frontend:** https://limit-challenge-three.vercel.app/submissions
+* **API:** https://limit-challenge-backend-1ts4.onrender.com/api/submissions/
+
+---
+
+## Demo (Walkthrough)
+
+👉 https://www.loom.com/share/9b881aba289f4688b5d93b871ab3c153
 
 ---
 
 ## Core Workflow
 
-```
+```id="workflow"
 submissions list → filtering → pagination → detail → back with preserved context
 ```
 
-The application is designed to support this flow with minimal friction and strong state consistency.
+The application is designed around this loop, with particular attention to **state persistence and navigational consistency**.
 
 ---
 
@@ -32,14 +39,18 @@ The application is designed to support this flow with minimal friction and stron
 
   * Date range (`createdFrom`, `createdTo`)
   * Has documents / has notes
-* Filters are fully **URL-synced** for shareable and reproducible views
+* Filters are fully **URL-driven**, enabling:
+
+  * refresh-safe state
+  * shareable links
+  * reproducible views
 
 ---
 
 ### Sorting
 
-* Column-level sorting controls in the table UI
-* Sort by:
+* Column-level sorting controls directly in the table UI
+* Supports sorting by:
 
   * Created / updated date
   * Broker / company name
@@ -51,56 +62,83 @@ The application is designed to support this flow with minimal friction and stron
 
 ### Submission Detail
 
-* Structured view with:
+* Structured detail view including:
 
   * Summary
   * Documents
   * Notes
-  * Related metadata
+  * Company, broker, owner, and contacts
 * Dedicated loading and error states
-* Navigation preserves filter context
+* Navigation preserves filter and pagination context
 
 ---
 
 ### UX Considerations
 
-* Debounced search input
-* Collapsible advanced filters to keep primary UI clean
+* Debounced search input to reduce unnecessary requests
+* Collapsible advanced filters to keep the primary UI focused
 * Clickable table rows with modifier key support (cmd/ctrl click)
-* Deterministic colored avatars for better visual scanning
-* Consistent spacing and hierarchy using MUI theming
+* Deterministic colored avatars for visual consistency
+* Clickable emails and phone numbers (`mailto:` / `tel:`)
+* Consistent layout and spacing using MUI theming
 
 ---
 
 ## Approach
 
-The implementation prioritizes **clarity, performance, and scalability** over adding unnecessary complexity.
+The implementation prioritizes **clarity, scalability, and real-world usability** over adding unnecessary complexity.
 
-Key decisions:
+### URL as Source of Truth
 
-* **URL as source of truth**
-  Filters and pagination are stored in the URL to ensure:
+Filters and pagination are stored in the URL to ensure:
 
-  * refresh persistence
-  * shareable links
-  * native browser navigation support
+* persistence across refreshes
+* shareable and reproducible views
+* compatibility with browser navigation (back/forward)
 
-* **Separation of concerns**
+---
 
-  * URL state → filters & pagination
-  * React Query → server data & caching
-  * local state → UI interactions (debounce, toggles)
+### Separation of Concerns
 
-* **Backend-driven efficiency**
+* **URL state** → filters & pagination
+* **React Query** → server data fetching & caching
+* **Local state** → UI interactions (debounce, toggles)
 
-  * `select_related` for core relations
-  * `annotate` for document/note counts
-  * optimized list vs detail query strategies
+This separation keeps each concern predictable and easier to evolve.
 
-* **Progressive complexity in UI**
+---
 
-  * primary filters always visible
-  * advanced filters collapsed by default
+### Backend Efficiency
+
+* `select_related` for key relationships
+* `annotate` for computed fields (document and note counts)
+* Optimized queryset strategies for list vs detail endpoints
+
+---
+
+### Progressive UI Complexity
+
+* Primary filters are always visible
+* Advanced filters are opt-in and collapsed by default
+
+This avoids overwhelming the user while still supporting complex queries.
+
+---
+
+## Deployment
+
+The application is deployed using a split architecture:
+
+* **Frontend:** Deployed on Vercel (optimized for Next.js App Router and edge delivery)
+* **Backend:** Deployed on Render (simple setup for Django services)
+
+Key considerations:
+
+* Environment-based configuration (`NEXT_PUBLIC_API_BASE_URL`)
+* Server-side filtering and sorting to keep the frontend lightweight
+* Pre-deploy migrations and seeding for demo readiness
+
+This setup prioritizes **fast iteration, simplicity, and reliable demo availability**.
 
 ---
 
@@ -109,9 +147,9 @@ Key decisions:
 ### Frontend
 
 * **Vitest + Testing Library**
-* Coverage includes:
+* Covers:
 
-  * Table rendering (loading, empty, error states)
+  * Table states (loading, empty, error)
   * Custom hooks (`useDebounce`, `useSearchState`)
   * Utility functions
 
@@ -216,19 +254,23 @@ npm run dev
 * Keep the interface **scanable and predictable**
 * Favor **functional clarity over visual complexity**
 * Build for **real-world usage patterns**, not just demo completeness
-* Avoid unnecessary abstractions unless a pattern clearly emerges
+* Avoid premature abstractions
 
 ---
 
 ## Future Improvements
 
-* Extended search across more fields
-* Role-based access control
-* Production-grade authentication strategy
-* Improved accessibility audit
+- Extended search across more fields (e.g. notes, broker, owner)
+- Role-based access control and authentication flow
+- Production-grade authentication strategy
+- Accessibility audit and keyboard navigation improvements
+- Mobile-specific card-based layout for improved small-screen usability
+- End-to-end testing with Playwright to cover full user flows
+- Saved filter views and user-specific preferences
+- Export functionality (CSV / Excel) for filtered datasets
 
 ---
 
 ## Author
 
-Built as part of a technical challenge with a focus on **real-world product thinking and maintainable architecture**.
+Built as part of a technical challenge with a focus on **practical product thinking and maintainable architecture**.
