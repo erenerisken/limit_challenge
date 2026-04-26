@@ -1,5 +1,6 @@
 import { getInitials } from '@/lib/utils/string';
 
+/** Generates a stable HSL color from a string value. */
 export function stringToColor(str: string) {
   let hash = 0;
 
@@ -12,6 +13,7 @@ export function stringToColor(str: string) {
   return `hsl(${h}, 60%, 60%)`;
 }
 
+/** Builds display props for avatar components from a user's name. */
 export function getAvatarProps(name?: string | null) {
   const safeName = name || '';
 

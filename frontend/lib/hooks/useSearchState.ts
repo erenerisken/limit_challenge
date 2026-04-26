@@ -20,11 +20,13 @@ type UseSearchStateOptions<T> = SearchStatePreset<T> & {
 type SearchStateUpdates = Record<string, Primitive>;
 
 export const searchStatePresets = {
+  /** Preset for plain string query parameters. Empty values are treated as `undefined`. */
   string: <T extends string = string>(): SearchStatePreset<T | undefined> => ({
     parse: (value) => (value || undefined) as T | undefined,
     serialize: (value) => value,
   }),
 
+  /** Preset for numeric query parameters. Invalid numbers are treated as `undefined`. */
   number: (): SearchStatePreset<number | undefined> => ({
     parse: (value) => {
       if (!value) return undefined;
@@ -35,6 +37,7 @@ export const searchStatePresets = {
     serialize: (value) => value,
   }),
 
+  /** Preset for boolean query parameters using the string literals `true` and `false`. */
   boolean: (): SearchStatePreset<boolean | undefined> => ({
     parse: (value) => {
       if (value === 'true') return true;
@@ -54,6 +57,10 @@ function updateSearchParam(params: URLSearchParams, key: string, value: Primitiv
   params.set(key, String(value));
 }
 
+/**
+ * Binds a single query parameter to React state and returns helpers to update
+ * either that value or multiple search params at once.
+ */
 export function useSearchState<T>({
   name,
   defaultValue,
